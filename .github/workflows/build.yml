@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Build macOS dylib
         env:
-          SDL2_VERSION: 2.0.18
+          SDL2_VERSION: 2.0.20
         run: |
           curl -s -L -O http://www.libsdl.org/release/SDL2-${SDL2_VERSION}.tar.gz
           tar xf SDL2-${SDL2_VERSION}.tar.gz
@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Fetch Windows dll
         env:
-          SDL2_VERSION: 2.0.18
+          SDL2_VERSION: 2.0.20
         run: |
           curl -s -L -O https://libsdl.org/release/SDL2-${SDL2_VERSION}-win32-x64.zip
           unzip SDL2-${SDL2_VERSION}-win32-x64.zip
@@ -49,12 +49,12 @@ jobs:
         run: yum -y install libXext-devel libX11-devel libGL-devel libGLU-devel libXrender-devel libXrandr-devel libXcursor-devel libXinerama-devel libXi-devel libXScrnSaver-devel gettext-devel make gcc
       - name: Build Linux so
         env:
-          SDL2_VERSION: 2.0.18
+          SDL2_VERSION: 2.0.20
         run: |
           curl -s -L -O http://www.libsdl.org/release/SDL2-${SDL2_VERSION}.tar.gz
           tar xf SDL2-${SDL2_VERSION}.tar.gz
           cd SDL2-${SDL2_VERSION}
-          ./configure  --disable-rpath --enable-sdl-dlopen --disable-loadso  --disable-audio --disable-sensor --enable-x11-shared --disable-video-directfb --disable-video-vulkan --disable-video-dummy --disable-power --disable-joystick --disable-haptic --disable-filesystem --disable-threads --disable-file --disable-cpuinfo --prefix "${PWD}/.."
+          ./configure  --disable-rpath --enable-sdl-dlopen --disable-loadso  --disable-audio --disable-sensor --enable-x11-shared --disable-video-directfb --disable-video-vulkan --disable-video-dummy --disable-power --disable-joystick --disable-haptic --disable-filesystem --disable-file --disable-cpuinfo --prefix "${PWD}/.."
           make
           make install
       - name: Upload Linux so
