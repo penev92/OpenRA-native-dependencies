@@ -46,7 +46,7 @@ jobs:
     container: centos:centos7
     steps:
       - name: Install Dependencies
-        run: yum -y install libXext-devel libX11-devel libGL-devel libGLU-devel libXrender-devel libXrandr-devel libXcursor-devel libXinerama-devel libXi-devel libXScrnSaver-devel gettext-devel make gcc
+        run: yum -y install libXext-devel libX11-devel wayland-devel libGL-devel libGLU-devel libXrender-devel libXrandr-devel libXcursor-devel libXinerama-devel libXi-devel libXScrnSaver-devel gettext-devel make gcc
       - name: Build Linux so
         env:
           SDL2_VERSION: 2.0.20
@@ -54,7 +54,7 @@ jobs:
           curl -s -L -O http://www.libsdl.org/release/SDL2-${SDL2_VERSION}.tar.gz
           tar xf SDL2-${SDL2_VERSION}.tar.gz
           cd SDL2-${SDL2_VERSION}
-          ./configure  --disable-rpath --enable-sdl-dlopen --disable-loadso  --disable-audio --disable-sensor --enable-x11-shared --disable-video-directfb --disable-video-vulkan --disable-video-dummy --disable-power --disable-joystick --disable-haptic --disable-filesystem --disable-file --disable-cpuinfo --prefix "${PWD}/.."
+          ./configure --disable-rpath --enable-sdl-dlopen --disable-loadso --disable-audio --disable-sensor --enable-x11-shared --enable-video-wayland --disable-video-directfb --disable-video-vulkan --disable-video-dummy --disable-power --disable-joystick --disable-haptic --disable-filesystem --disable-file --disable-cpuinfo --prefix "${PWD}/.."
           make
           make install
       - name: Upload Linux so
