@@ -10,21 +10,63 @@ jobs:
     name: macOS
     runs-on: macos-11
     steps:
-      - name: Build macOS dylib
+      - name: Clone Repository
+        uses: actions/checkout@v2
+      - name: Freetype
+        env:
+          FREETYPE_VERSION: 2.12.1
+        run: |
+          mkdir -p artifacts/x86_64
+          mkdir artifacts/arm64
+          curl -s -L -O https://download.savannah.gnu.org/releases/freetype/freetype-${FREETYPE_VERSION}.tar.xz
+          tar xf freetype-${FREETYPE_VERSION}.tar.xz
+          cd freetype-${FREETYPE_VERSION}
+          cmake -B build -DBUILD_SHARED_LIBS=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 -DFT_DISABLE_ZLIB=TRUE -DFT_DISABLE_BZIP2=TRUE -DFT_DISABLE_PNG=TRUE -DFT_DISABLE_HARFBUZZ=TRUE -DFT_DISABLE_BROTLI=TRUE
+          cmake --build build
+          lipo -thin arm64 build/libfreetype.6.dylib -output ../artifacts/arm64/freetype6.dylib
+          lipo -thin x86_64 build/libfreetype.6.dylib -output ../artifacts/x86_64/freetype6.dylib
+      - name: OpenAL-soft
+        env:
+          OPENALSOFT_VERSION: 1.22.2
+        run: |
+          curl -s -L -O https://openal-soft.org/openal-releases/openal-soft-${OPENALSOFT_VERSION}.tar.bz2
+          tar xf openal-soft-${OPENALSOFT_VERSION}.tar.bz2
+          cd openal-soft-${OPENALSOFT_VERSION}
+          cmake -B build -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9 -DALSOFT_EXAMPLES=OFF -DALSOFT_UTILS=OFF -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11
+          cmake --build build
+          lipo -thin arm64 build/libopenal.${OPENALSOFT_VERSION}.dylib -output ../artifacts/arm64/soft_oal.dylib
+          lipo -thin x86_64 build/libopenal.${OPENALSOFT_VERSION}.dylib -output ../artifacts/x86_64/soft_oal.dylib
+      - name: Lua 5.1
+        env:
+          LUA_VERSION: 5.1.5
+        run: |
+          curl -s -L -O https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
+          tar xf lua-${LUA_VERSION}.tar.gz
+          cd lua-${LUA_VERSION}/src/
+          patch < ../../liblua.patch
+          make liblua.5.1.dylib CC="clang -target x86_64-apple-macos10.11" LD="clang -target x86_64-apple-macos10.11"
+          cp liblua.${LUA_VERSION}.dylib ../../artifacts/x86_64/lua51.dylib
+          make clean
+          make liblua.5.1.dylib CC="clang -target arm64-apple-macos10.15" LD="clang -target arm64-apple-macos10.15"
+          cp liblua.${LUA_VERSION}.dylib ../../artifacts/arm64/lua51.dylib
+      - name: SDL2
         env:
           SDL2_VERSION: 2.26.1
         run: |
           curl -s -L -O http://www.libsdl.org/release/SDL2-${SDL2_VERSION}.tar.gz
           tar xf SDL2-${SDL2_VERSION}.tar.gz
-          cd SDL2-${SDL2_VERSION}
-          ./configure CFLAGS="-m64 -mmacosx-version-min=10.9" LDFLAGS="-m64 -mmacosx-version-min=10.9" --without-x --disable-jack --prefix "${PWD}/.."
+          mkdir SDL2-${SDL2_VERSION}/build
+          cd SDL2-${SDL2_VERSION}/build
+          CC=../build-scripts/clang-fat.sh ../configure --without-x --disable-jack --disable-static --prefix "${PWD}"
           make
           make install
-      - name: Upload macOS dylib
+          lipo -thin arm64 lib/libSDL2-2.0.0.dylib -output ../../artifacts/arm64/SDL2.dylib
+          lipo -thin x86_64 lib/libSDL2-2.0.0.dylib -output ../../artifacts/x86_64/SDL2.dylib
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: macOS
-          path: lib/libSDL2-2.0.0.dylib
+          path: artifacts
   windows:
     name: Windows
     runs-on: ubuntu-20.04
@@ -35,7 +77,7 @@ jobs:
         run: |
           curl -s -L -O https://libsdl.org/release/SDL2-${SDL2_VERSION}-win32-x64.zip
           unzip SDL2-${SDL2_VERSION}-win32-x64.zip
-      - name: Upload Windows dll
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: Windows
@@ -57,7 +99,7 @@ jobs:
           ./configure --disable-rpath --enable-sdl-dlopen --disable-loadso --disable-audio --disable-sensor --enable-x11-shared --enable-video-wayland --disable-video-directfb --disable-video-vulkan --disable-video-dummy --disable-power --disable-joystick --disable-haptic --disable-filesystem --disable-file --disable-cpuinfo --prefix "${PWD}/.."
           make
           make install
-      - name: Upload Linux so
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: Linux
