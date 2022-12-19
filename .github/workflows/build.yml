@@ -30,7 +30,7 @@ jobs:
           cmake --build build
           lipo -thin arm64 build/libfreetype.6.dylib -output ../artifacts/arm64/freetype6.dylib
           lipo -thin x86_64 build/libfreetype.6.dylib -output ../artifacts/x86_64/freetype6.dylib
-      - name: OpenAL-soft
+      - name: OpenAL Soft
         run: |
           curl -s -L -O https://openal-soft.org/openal-releases/openal-soft-${OPENALSOFT_VERSION}.tar.bz2
           tar xf openal-soft-${OPENALSOFT_VERSION}.tar.bz2
@@ -66,22 +66,63 @@ jobs:
         with:
           name: macOS
           path: artifacts
-  windows:
-    name: Windows
+  linux-x64:
+    name: Linux (x64)
     runs-on: ubuntu-20.04
+    container: centos:centos7
     steps:
-      - name: Fetch Windows dll
-        env:
-          SDL2_VERSION: 2.26.1
+      - name: Install Dependencies
         run: |
-          curl -s -L -O https://libsdl.org/release/SDL2-${SDL2_VERSION}-win32-x64.zip
-          unzip SDL2-${SDL2_VERSION}-win32-x64.zip
+          chown -R $(id -u):$(id -g) $PWD
+          yum -y install https://repo.ius.io/ius-release-el7.rpm centos-release-scl scl-utils
+          yum -y install devtoolset-8 cmake3 bzip2 patch
+          yum -y install libXext-devel libX11-devel libgl1-devel libglu1-devel libXrender-devel libXrandr-devel libXcursor-devel libXinerama-devel libXi-devel libXss-devel
+          mkdir -p artifacts/x64
+      - name: Freetype
+        run: |
+          source /opt/rh/devtoolset-8/enable
+          curl -s -L -O https://download.savannah.gnu.org/releases/freetype/freetype-${FREETYPE_VERSION}.tar.xz
+          tar xf freetype-${FREETYPE_VERSION}.tar.xz
+          mkdir freetype-${FREETYPE_VERSION}/build
+          cd freetype-${FREETYPE_VERSION}/build
+          cmake3 .. -DBUILD_SHARED_LIBS=true -DCMAKE_BUILD_TYPE=Release -DFT_DISABLE_ZLIB=TRUE -DFT_DISABLE_BZIP2=TRUE -DFT_DISABLE_PNG=TRUE -DFT_DISABLE_HARFBUZZ=TRUE -DFT_DISABLE_BROTLI=TRUE
+          cmake3 --build .
+          cp libfreetype.so ../../artifacts/x64/freetype6.so
+      - name: OpenAL Soft
+        run: |
+          source /opt/rh/devtoolset-8/enable
+          curl -s -L -O https://openal-soft.org/openal-releases/openal-soft-${OPENALSOFT_VERSION}.tar.bz2
+          tar xf openal-soft-${OPENALSOFT_VERSION}.tar.bz2
+          cd openal-soft-${OPENALSOFT_VERSION}/build
+          cmake3 .. -DBUILD_SHARED_LIBS=true -DCMAKE_BUILD_TYPE=Release
+          cmake3 --build .
+          cp libopenal.so ../../artifacts/x64/soft_oal.so
+      - name: Lua 5.1
+        run: |
+          source /opt/rh/devtoolset-8/enable
+          curl -s -L -O https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
+          curl -s -L -O https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/liblua.linux.patch
+          tar xf lua-${LUA_VERSION}.tar.gz
+          cd lua-${LUA_VERSION}/src/
+          patch < ../../liblua.linux.patch
+          make liblua.so
+          cp liblua.so ../../artifacts/x64/lua51.so
+      - name: SDL2
+        run: |
+          source /opt/rh/devtoolset-8/enable
+          curl -s -L -O http://www.libsdl.org/release/SDL2-${SDL2_VERSION}.tar.gz
+          tar xf SDL2-${SDL2_VERSION}.tar.gz
+          cd SDL2-${SDL2_VERSION}
+          ./configure --disable-rpath --disable-loadso --disable-audio --disable-sensor --enable-x11-shared --enable-video-wayland --disable-video-directfb --disable-video-vulkan --disable-video-dummy --disable-power --disable-joystick --disable-haptic --disable-filesystem --disable-file --disable-cpuinfo --prefix "${PWD}"
+          make
+          make install
+          cp lib/libSDL2.so ../artifacts/x64/SDL2.so
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: Windows
-          path: SDL2.dll
-  linux-aarch64:
+          name: Linux (x64)
+          path: artifacts
+  linux-arm64:
     runs-on: ubuntu-20.04
     name: Linux (aarch64)
     steps:
@@ -109,7 +150,7 @@ jobs:
             cmake .. -DBUILD_SHARED_LIBS=true -DCMAKE_BUILD_TYPE=Release -DFT_DISABLE_ZLIB=TRUE -DFT_DISABLE_BZIP2=TRUE -DFT_DISABLE_PNG=TRUE -DFT_DISABLE_HARFBUZZ=TRUE -DFT_DISABLE_BROTLI=TRUE
             cmake --build .
             cp libfreetype.so /artifacts/arm64/freetype6.so
-      - name: OpenAL-soft
+      - name: OpenAL Soft
         uses: uraimo/run-on-arch-action@v2
         with:
           arch: aarch64
@@ -170,5 +211,37 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: Linux
+          name: Linux (arm64)
+          path: artifacts
+  windows:
+    name: Windows
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Freetype
+        run: |
+          mkdir -p artifacts/x64
+          mkdir artifacts/x86
+          curl -s -L -o artifacts/x64/freetype.dll https://github.com/ubawurinna/freetype-windows-binaries/blob/v${FREETYPE_VERSION}/release%20dll/win64/freetype.dll?raw=true
+          curl -s -L -o artifacts/x86/freetype.dll https://github.com/ubawurinna/freetype-windows-binaries/blob/v${FREETYPE_VERSION}/release%20dll/win32/freetype.dll?raw=true
+      - name: OpenAL Soft
+        run: |
+          curl -s -L -O https://openal-soft.org/openal-binaries/openal-soft-${OPENALSOFT_VERSION}-bin.zip
+          unzip openal-soft-${OPENALSOFT_VERSION}-bin.zip openal-soft-1.22.2-bin/bin/Win32/soft_oal.dll -d artifacts/x86 -j
+          unzip openal-soft-${OPENALSOFT_VERSION}-bin.zip openal-soft-1.22.2-bin/bin/Win64/soft_oal.dll -d artifacts/x64 -j
+      - name: Lua 5.1
+        run: |
+          curl -s -L -o lua-${LUA_VERSION}_Win32_dll16_lib.zip https://sourceforge.net/projects/luabinaries/files/${LUA_VERSION}/Windows%20Libraries/Dynamic/lua-${LUA_VERSION}_Win32_dll16_lib.zip/download
+          unzip lua-${LUA_VERSION}_Win32_dll16_lib.zip lua5.1.dll -d artifacts/x86
+          curl -s -L -o lua-${LUA_VERSION}_Win64_dll16_lib.zip https://sourceforge.net/projects/luabinaries/files/${LUA_VERSION}/Windows%20Libraries/Dynamic/lua-${LUA_VERSION}_Win64_dll16_lib.zip/download
+          unzip lua-${LUA_VERSION}_Win64_dll16_lib.zip lua5.1.dll -d artifacts/x64
+      - name: SDL2
+        run: |
+          curl -s -L -O https://libsdl.org/release/SDL2-${SDL2_VERSION}-win32-x86.zip
+          unzip SDL2-${SDL2_VERSION}-win32-x86.zip SDL2.dll -d artifacts/x86
+          curl -s -L -O https://libsdl.org/release/SDL2-${SDL2_VERSION}-win32-x64.zip
+          unzip SDL2-${SDL2_VERSION}-win32-x64.zip SDL2.dll -d artifacts/x64
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Windows
           path: artifacts
