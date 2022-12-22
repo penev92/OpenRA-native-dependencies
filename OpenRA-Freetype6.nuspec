@@ -1,0 +1,24 @@
+﻿<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>OpenRA-Freetype6</id>
+    <version>1.0.8</version>
+    <authors>teinarss</authors>
+    <owners>tomas</owners>
+    <projectUrl>https://github.com/OpenRA/OpenRA</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Native Freetype6 binaries packaged for OpenRA</description>
+    <copyright>Copyright 2022</copyright>
+    <releaseNotes>
+    </releaseNotes>
+  </metadata>
+  <files>
+    <file src="native/win-x64/freetype6.dll" target="native/win-x64" />
+    <file src="native/win-x86/freetype6.dll" target="native/win-x86" />
+    <file src="native/linux-x64/freetype6.so" target="native/linux-x64" />
+    <file src="native/linux-arm64/freetype6.so" target="native/linux-arm64" />
+    <file src="native/osx-x64/freetype6.dylib" target="native/osx-x64" />
+    <file src="native/osx-arm64/freetype6.dylib" target="native/osx-arm64" />
+    <file src="OpenRA-Freetype6.targets" target="build" />
+  </files>
+</package>
