@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>OpenRA-SDL2-CS</id>
-    <version>1.0.35</version>
+    <version>1.0.36</version>
     <authors>teinarss</authors>
     <owners>tomas</owners>
     <projectUrl>https://github.com/OpenRA/OpenRA</projectUrl>
