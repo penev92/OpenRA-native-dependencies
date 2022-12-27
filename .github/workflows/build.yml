@@ -3,13 +3,14 @@ name: Build Binaries
 env:
   FREETYPE_VERSION: 2.12.1
   LUA_VERSION: 5.1.5
-  OPENALSOFT_VERSION: 1.22.2
+  OPENALSOFT_VERSION: 1.20.1
   SDL2_VERSION: 2.26.1
 
 on:
   push:
     branches:
       - master
+      - test
 
 jobs:
   macos:
@@ -226,8 +227,8 @@ jobs:
       - name: OpenAL Soft
         run: |
           curl -s -L -O https://openal-soft.org/openal-binaries/openal-soft-${OPENALSOFT_VERSION}-bin.zip
-          unzip openal-soft-${OPENALSOFT_VERSION}-bin.zip openal-soft-1.22.2-bin/bin/Win32/soft_oal.dll -d artifacts/x86 -j
-          unzip openal-soft-${OPENALSOFT_VERSION}-bin.zip openal-soft-1.22.2-bin/bin/Win64/soft_oal.dll -d artifacts/x64 -j
+          unzip openal-soft-${OPENALSOFT_VERSION}-bin.zip openal-soft-${OPENALSOFT_VERSION}-bin/bin/Win32/soft_oal.dll -d artifacts/x86 -j
+          unzip openal-soft-${OPENALSOFT_VERSION}-bin.zip openal-soft-${OPENALSOFT_VERSION}-bin/bin/Win64/soft_oal.dll -d artifacts/x64 -j
       - name: Lua 5.1
         run: |
           curl -s -L -o lua-${LUA_VERSION}_Win32_dll16_lib.zip https://sourceforge.net/projects/luabinaries/files/${LUA_VERSION}/Windows%20Libraries/Dynamic/lua-${LUA_VERSION}_Win32_dll16_lib.zip/download
