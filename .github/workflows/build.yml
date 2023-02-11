@@ -218,12 +218,26 @@ jobs:
     name: Windows (x64 + x86)
     runs-on: ubuntu-20.04
     steps:
-      - name: Freetype
+      - name: Clone Repository
+        uses: actions/checkout@v2.1.0
+      - name: Install Dependencies
         run: |
           mkdir -p artifacts/x64
           mkdir artifacts/x86
-          curl -s -L -o artifacts/x64/freetype.dll https://github.com/ubawurinna/freetype-windows-binaries/blob/v${FREETYPE_VERSION}/release%20dll/win64/freetype.dll?raw=true
-          curl -s -L -o artifacts/x86/freetype.dll https://github.com/ubawurinna/freetype-windows-binaries/blob/v${FREETYPE_VERSION}/release%20dll/win32/freetype.dll?raw=true
+          sudo apt-get install mingw-w64
+      - name: Freetype
+        run: |
+          curl -s -L -O https://download.savannah.gnu.org/releases/freetype/freetype-${FREETYPE_VERSION}.tar.xz
+          tar xf freetype-${FREETYPE_VERSION}.tar.xz
+          mkdir freetype-${FREETYPE_VERSION}/build
+          cd freetype-${FREETYPE_VERSION}/build
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=../../mingw-x64.cmake -DBUILD_SHARED_LIBS=true -DCMAKE_BUILD_TYPE=Release -DFT_DISABLE_ZLIB=TRUE -DFT_DISABLE_BZIP2=TRUE -DFT_DISABLE_PNG=TRUE -DFT_DISABLE_HARFBUZZ=TRUE -DFT_DISABLE_BROTLI=TRUE
+          cmake --build .
+          cp libfreetype.dll ../../artifacts/x64/freetype6.dll
+          rm -rf *
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=../../mingw-x86.cmake -DBUILD_SHARED_LIBS=true -DCMAKE_BUILD_TYPE=Release -DFT_DISABLE_ZLIB=TRUE -DFT_DISABLE_BZIP2=TRUE -DFT_DISABLE_PNG=TRUE -DFT_DISABLE_HARFBUZZ=TRUE -DFT_DISABLE_BROTLI=TRUE -DCMAKE_SHARED_LINKER_FLAGS="-static-libgcc"
+          cmake --build .
+          cp libfreetype.dll ../../artifacts/x86/freetype6.dll
       - name: OpenAL Soft
         run: |
           curl -s -L -O https://openal-soft.org/openal-binaries/openal-soft-${OPENALSOFT_VERSION}-bin.zip
@@ -231,10 +245,14 @@ jobs:
           unzip -j -d artifacts/x64 openal-soft-${OPENALSOFT_VERSION}-bin.zip openal-soft-${OPENALSOFT_VERSION}-bin/bin/Win64/soft_oal.dll
       - name: Lua 5.1
         run: |
-          curl -s -L -o lua-${LUA_VERSION}_Win32_dll16_lib.zip https://sourceforge.net/projects/luabinaries/files/${LUA_VERSION}/Windows%20Libraries/Dynamic/lua-${LUA_VERSION}_Win32_dll16_lib.zip/download
-          unzip lua-${LUA_VERSION}_Win32_dll16_lib.zip lua5.1.dll -d artifacts/x86
-          curl -s -L -o lua-${LUA_VERSION}_Win64_dll16_lib.zip https://sourceforge.net/projects/luabinaries/files/${LUA_VERSION}/Windows%20Libraries/Dynamic/lua-${LUA_VERSION}_Win64_dll16_lib.zip/download
-          unzip lua-${LUA_VERSION}_Win64_dll16_lib.zip lua5.1.dll -d artifacts/x64
+          curl -s -L -O https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
+          tar xf lua-${LUA_VERSION}.tar.gz
+          cd lua-${LUA_VERSION}/src/
+          make mingw CC=x86_64-w64-mingw32-gcc
+          cp lua51.dll ../../artifacts/x64/
+          make clean
+          make mingw CC=i686-w64-mingw32-gcc
+          cp lua51.dll ../../artifacts/x86/
       - name: SDL2
         run: |
           curl -s -L -O https://libsdl.org/release/SDL2-${SDL2_VERSION}-win32-x86.zip
