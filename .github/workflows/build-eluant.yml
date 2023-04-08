@@ -43,19 +43,72 @@ jobs:
       # Do we care about old artifacts piling up, taking up storage space?
       # Do we even want to upload these as build artifacts if we can get the final NuGet package?
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
-          name: Windows
+          name: WindowsNatives
           path: artifacts
 
-      - name: Setup NuGet.exe
-        uses: NuGet/setup-nuget@v1.1.1
+  macos:
+    name: macOS (x64 + arm64)
+    runs-on: macos-11
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
 
+      - name: Lua 5.1
+        run: |
+          curl -s -L -O https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
+          tar xf lua-${LUA_VERSION}.tar.gz
+          cd lua-${LUA_VERSION}/src/
+          patch < ../../liblua.patch
+          make liblua.5.1.dylib CC="clang -target x86_64-apple-macos10.11" LD="clang -target x86_64-apple-macos10.11"
+          cp liblua.${LUA_VERSION}.dylib ../../artifacts/x86_64/lua51.dylib
+          make clean
+          make liblua.5.1.dylib CC="clang -target arm64-apple-macos10.15" LD="clang -target arm64-apple-macos10.15"
+          cp liblua.${LUA_VERSION}.dylib ../../artifacts/arm64/lua51.dylib
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: macOSNatives
+          path: artifacts
+
+  #linux-x64:
+  #  name: Linux (x64)
+  #  runs-on: ubuntu-20.04
+  #  container: centos:centos7
+  #  steps:
+
+  #linux-arm64:
+  #  runs-on: ubuntu-20.04
+  #  name: Linux (arm64)
+  #  steps:
+  
+  packageNuget:
+    name: Package NuGet
+    runs-on: ubuntu-22.04
+    needs: [windows,macos]
+    steps:
+      - name: Download artifacts - Windows
+        uses: actions/download-artifact@v2
+        with:
+          name: WindowsNatives
+          path: ./native2
+
+      - name: Download artifacts - MacOS
+        uses: actions/download-artifact@v2
+        with:
+          name: macOSNatives
+          path: ./native2
+
+      - name: Setup NuGet.exe
+        uses: NuGet/setup-nuget@v1
+  
       - name: Package NuGet
         run: nuget pack OpenRA-Eluant.nuspec -OutputDirectory ./nuget
-
+  
       - name: Upload NuGet package to Artifacts
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: WindowsNuGet
           path: nuget
