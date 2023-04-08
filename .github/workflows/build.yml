@@ -7,10 +7,11 @@ env:
   SDL2_VERSION: 2.26.1
 
 on:
-  push:
-    branches:
-      - master
-      - test
+  workflow_dispatch:
+  #push:
+  #  branches:
+  #    - master
+  #    - test
 
 jobs:
   macos:
