@@ -1,0 +1,58 @@
+name: Build Eluant
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version'
+        default: '1.0.0'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows (x64 + x86)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          mkdir -p artifacts/x64
+          mkdir artifacts/x86
+          sudo apt-get install mingw-w64
+
+      - name: Compile native
+        run: |
+          curl -s -L -O https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
+          tar xf lua-${LUA_VERSION}.tar.gz
+          cd lua-${LUA_VERSION}/src/
+          make mingw CC=x86_64-w64-mingw32-gcc
+          cp lua51.dll ../../artifacts/x64/
+          make clean
+          make mingw CC=i686-w64-mingw32-gcc
+          cp lua51.dll ../../artifacts/x86/
+
+      # Do we want to have the generated NuGet packages uploaded with the artifacts as well?
+      # Do we care about old artifacts piling up, taking up storage space?
+      # Do we even want to upload these as build artifacts if we can get the final NuGet package?
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: Windows
+          path: artifacts
+
+      - name: Setup NuGet.exe
+        uses: NuGet/setup-nuget@v1.1.1
+
+      - name: Package NuGet
+        run: nuget pack OpenRA-Eluant.nuspec -OutputDirectory ./nuget
+
+      - name: Upload NuGet package to Artifacts
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: WindowsNuGet
+          path: nuget

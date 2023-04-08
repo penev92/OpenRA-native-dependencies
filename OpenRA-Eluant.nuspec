@@ -16,8 +16,8 @@
     </releaseNotes>
   </metadata>
   <files>
-    <file src="native/win-x64/lua51.dll" target="native/win-x64" />
-    <file src="native/win-x86/lua51.dll" target="native/win-x86" />
+    <file src="artifacts/x64/lua51.dll" target="native/win-x64" />
+    <file src="artifacts/x86/lua51.dll" target="native/win-x86" />
     <file src="native/linux-x64/lua51.so" target="native/linux-x64" />
     <file src="native/linux-arm64/lua51.so" target="native/linux-arm64" />
     <file src="native/osx-x64/lua51.dylib" target="native/osx-x64" />
