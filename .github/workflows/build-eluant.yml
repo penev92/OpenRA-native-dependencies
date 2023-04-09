@@ -177,7 +177,9 @@ jobs:
         uses: NuGet/setup-nuget@v1
   
       - name: Package NuGet
-        run: nuget pack OpenRA-Eluant.nuspec -version ${{ github.event.inputs.version }} -OutputDirectory ./nuget
+        run: |
+          nuget setversion OpenRA-Eluant.nuspec -version ${{ github.event.inputs.version }}
+          nuget pack OpenRA-Eluant.nuspec -OutputDirectory ./nuget
   
       - name: Upload NuGet package to Artifacts
         uses: actions/upload-artifact@v3
