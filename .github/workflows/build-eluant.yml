@@ -176,5 +176,5 @@ jobs:
       - name: Upload NuGet package to Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: WindowsNuGet
+          name: NuGet Package
           path: nuget
