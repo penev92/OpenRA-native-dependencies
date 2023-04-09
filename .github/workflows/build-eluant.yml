@@ -14,21 +14,23 @@ on:
 permissions:
   contents: read
 
+# Do we want to have the generated NuGet packages uploaded with the artifacts as well?
+# Do we care about old artifacts piling up, taking up storage space?
 jobs:
   windows:
     name: Windows (x64 + x86)
     runs-on: ubuntu-22.04
     steps:
-      - name: Clone Repository
-        uses: actions/checkout@v3
+      #- name: Clone Repository
+      #  uses: actions/checkout@v3
 
-      - name: Install Dependencies
+      - name: Setup Dependencies
         run: |
           mkdir -p artifacts/x64
           mkdir artifacts/x86
           sudo apt-get install mingw-w64
 
-      - name: Compile native
+      - name: Compile natives
         run: |
           curl -s -L -O https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
           tar xf lua-${LUA_VERSION}.tar.gz
@@ -39,23 +41,25 @@ jobs:
           make mingw CC=i686-w64-mingw32-gcc
           cp lua51.dll ../../artifacts/x86/
 
-      # Do we want to have the generated NuGet packages uploaded with the artifacts as well?
-      # Do we care about old artifacts piling up, taking up storage space?
-      # Do we even want to upload these as build artifacts if we can get the final NuGet package?
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: WindowsNatives
+          name: Natives-Windows
           path: artifacts
 
   macos:
     name: macOS (x64 + arm64)
     runs-on: macos-11
     steps:
-      - name: Clone Repository
-        uses: actions/checkout@v2
+      #- name: Clone Repository
+      #  uses: actions/checkout@v3
 
-      - name: Lua 5.1
+      - name: Setup Dependencies
+        run: |
+          mkdir -p artifacts/x86_64
+          mkdir artifacts/arm64
+
+      - name: Compile natives
         run: |
           curl -s -L -O https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
           tar xf lua-${LUA_VERSION}.tar.gz
@@ -70,17 +74,42 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: macOSNatives
+          name: Natives-MacOS
           path: artifacts
 
-  #linux-x64:
-  #  name: Linux (x64)
-  #  runs-on: ubuntu-20.04
-  #  container: centos:centos7
-  #  steps:
+  linux-x64:
+    name: Linux (x64)
+    runs-on: ubuntu-22.04
+    container: centos:centos7
+    steps:
+      - name: Setup Dependencies
+        run: |
+          chown -R $(id -u):$(id -g) $PWD
+          yum -y install https://repo.ius.io/ius-release-el7.rpm centos-release-scl scl-utils
+          yum -y install devtoolset-8 cmake3 bzip2 patch
+          yum -y install alsa-lib-devel portaudio-devel pulseaudio-libs-devel libsoundio-devel
+          yum -y install libXext-devel libX11-devel mesa-libGL-devel mesa-libGLU-devel libXrender-devel libXrandr-devel libXcursor-devel libXinerama-devel libXi-devel
+          mkdir -p artifacts/x64
+
+      - name: Compile natives
+        run: |
+          source /opt/rh/devtoolset-8/enable
+          curl -s -L -O https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz
+          curl -s -L -O https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/liblua.linux.patch
+          tar xf lua-${LUA_VERSION}.tar.gz
+          cd lua-${LUA_VERSION}/src/
+          patch < ../../liblua.linux.patch
+          make liblua.so
+          cp liblua.so ../../artifacts/x64/lua51.so
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Natives-Linux64
+          path: artifacts
 
   #linux-arm64:
-  #  runs-on: ubuntu-20.04
+  #  runs-on: ubuntu-22.04
   #  name: Linux (arm64)
   #  steps:
   
@@ -92,13 +121,19 @@ jobs:
       - name: Download artifacts - Windows
         uses: actions/download-artifact@v2
         with:
-          name: WindowsNatives
+          name: Natives-Windows
           path: ./native2
 
       - name: Download artifacts - MacOS
         uses: actions/download-artifact@v2
         with:
-          name: macOSNatives
+          name: Natives-MacOS
+          path: ./native2
+
+      - name: Download artifacts - Linux x64
+        uses: actions/download-artifact@v2
+        with:
+          name: Natives-Linux64
           path: ./native2
 
       - name: Setup NuGet.exe
