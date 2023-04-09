@@ -64,7 +64,7 @@ jobs:
           cp liblua.${LUA_VERSION}.dylib ../../artifacts/arm64/lua51.dylib
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Natives-MacOS
           path: artifacts
@@ -93,7 +93,7 @@ jobs:
           cp liblua.so ../../artifacts/x64/lua51.so
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Natives-Linux(x64)
           path: artifacts
@@ -128,7 +128,7 @@ jobs:
             cp liblua.so /artifacts/arm64/lua51.so
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Natives-Linux(arm64)
           path: artifacts
@@ -143,25 +143,25 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download artifacts - Windows
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Natives-Windows
           path: ./native2/win
 
       - name: Download artifacts - MacOS
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Natives-MacOS
           path: ./native2/osx
 
       - name: Download artifacts - Linux x64
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Natives-Linux(x64)
           path: ./native2/linux
 
       - name: Download artifacts - Linux x64
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Natives-Linux(arm64)
           path: ./native2/linux
