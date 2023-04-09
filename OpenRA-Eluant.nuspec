@@ -18,7 +18,7 @@
     <file src="native2/x64/lua51.dll" target="native/win-x64" />
     <file src="native2/x86/lua51.dll" target="native/win-x86" />
     <file src="native2/linux-x64/lua51.so" target="native/linux-x64" />
-    <file src="native/linux-arm64/lua51.so" target="native/linux-arm64" />
+    <file src="native2/linux-arm64/lua51.so" target="native/linux-arm64" />
     <file src="native2/osx-x64/lua51.dylib" target="native/osx-x64" />
     <file src="native2/osx-arm64/lua51.dylib" target="native/osx-arm64" />
     <file src="OpenRA-Eluant.targets" target="build" />
