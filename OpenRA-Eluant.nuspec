@@ -2,6 +2,7 @@
 <package>
   <metadata>
     <id>OpenRA-Eluant</id>
+    <version>1.0.21</version>
     <authors>teinarss</authors>
     <owners>tomas</owners>
     <projectUrl>https://github.com/OpenRA/OpenRA</projectUrl>

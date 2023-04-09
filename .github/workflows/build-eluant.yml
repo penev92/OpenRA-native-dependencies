@@ -5,11 +5,6 @@ env:
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Package version'
-        default: '1.0.0'
-        required: true
 
 permissions:
   contents: read
@@ -176,7 +171,6 @@ jobs:
   
       - name: Package NuGet
         run: |
-          nuget setversion OpenRA-Eluant.nuspec -version ${{ github.event.inputs.version }}
           nuget pack OpenRA-Eluant.nuspec -OutputDirectory ./nuget
   
       - name: Upload NuGet package to Artifacts
